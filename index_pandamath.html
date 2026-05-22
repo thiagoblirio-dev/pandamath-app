@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PandaMath - Painel do Professor Thiago Binda</title>
+    <!-- Tailwind CSS para um design moderno e responsivo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para ícones premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        panda: ['Quicksand', 'sans-serif'],
+                    },
+                    colors: {
+                        panda: {
+                            dark: '#1e293b',
+                            primary: '#4f46e5',
+                            secondary: '#10b981',
+                            accent: '#ff823a',
+                            light: '#f8fafc',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.25s ease-out;
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-[#f0f4f8] text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- Top Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-2xl flex items-center justify-center shadow-md shadow-indigo-200">
+                    <span class="text-2xl">🐼</span>
+                </div>
+                <div>
+                    <span class="font-panda font-bold text-xl tracking-tight text-slate-900">Panda<span class="text-indigo-600">Math</span></span>
+                    <span class="hidden sm:inline-block ml-2 px-2.5 py-0.5 text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">Prof. Thiago Binda</span>
+                </div>
+            </div>
+
+            <!-- Switcher de Modo: Professor / Aluno (ALUNO ATIVO POR PADRÃO) -->
+            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button id="btn-mode-teacher" onclick="switchView('teacher')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-chalkboard-user"></i> Professor
+                </button>
+                <button id="btn-mode-student" onclick="switchView('student')" class="px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 bg-white text-emerald-600 shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap"></i> Aluno
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Status do Banco de Dados -->
+        <div class="mb-4 flex justify-end">
+            <span id="db-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                Conectando ao banco de dados...
+            </span>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW: PROFESSOR (ESCONDIDO POR PADRÃO)        -->
+        <!-- ============================================== -->
+        <div id="view-teacher" class="space-y-8 animate-fade-in hidden">
+            <!-- Boas vindas / Stats -->
+            <div class="bg-gradient-to-r from-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl shadow-slate-950/20">
+                <div class="absolute right-0 bottom-0 opacity-10 transform translate-x-10 translate-y-10 pointer-events-none">
+                    <span class="text-[180px]">🐼</span>
+                </div>
+                <div class="relative z-10 max-w-2xl">
+                    <span class="bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">Painel do Professor</span>
+                    <h1 class="font-panda font-bold text-3xl sm:text-4xl mt-3 text-white">Olá, Professor Thiago Binda!</h1>
+                    <p class="text-slate-300 mt-2 text-sm sm:text-base">Gerencie seu acervo de questões de matemática, crie atividades personalizadas em segundos e acompanhe a evolução dos seus alunos em tempo real.</p>
+                    <button onclick="logoutTeacher()" class="mt-4 inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white border border-white/15 px-4 py-2 rounded-xl text-xs font-bold transition">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sair da área do professor
+                    </button>
+                </div>
+
+                <!-- Mini Cards de Estatísticas rápidos -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-white/10">
+                    <div class="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/5">
+                        <span class="text-xs text-slate-400 block font-medium">Questões Salvas</span>
+                        <span id="stat-total-questions" class="text-2xl font-bold font-panda text-indigo-300">0</span>
+                    </div>
+                    <div class="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/5">
+                        <span class="text-xs text-slate-400 block font-medium">Atividades Ativas</span>
+                        <span id="stat-total-quizzes" class="text-2xl font-bold font-panda text-emerald-400">0</span>
+                    </div>
+                    <div class="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/5">
+                        <span class="text-xs text-slate-400 block font-medium">Respostas Recebidas</span>
+                        <span id="stat-total-submissions" class="text-2xl font-bold font-panda text-amber-400">0</span>
+                    </div>
+                    <div class="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/5">
+                        <span class="text-xs text-slate-400 block font-medium">Média de Acertos</span>
+                        <span id="stat-average-score" class="text-2xl font-bold font-panda text-pink-400">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Abas do Professor -->
+            <div class="border-b border-slate-200 flex gap-6 overflow-x-auto custom-scrollbar">
+                <button onclick="switchTeacherTab('tab-dashboard')" id="btn-tab-dashboard" class="border-b-2 border-indigo-600 pb-4 px-1 text-sm font-bold text-indigo-600 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line"></i> Dashboard & Relatórios
+                </button>
+                <button onclick="switchTeacherTab('tab-questions')" id="btn-tab-questions" class="border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-800 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group"></i> Banco de Questões
+                </button>
+                <button onclick="switchTeacherTab('tab-create-quiz')" id="btn-tab-create-quiz" class="border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-800 whitespace-nowrap flex items-center gap-2">
+                    <i class="fa-solid fa-share-nodes"></i> Enviar Nova Lista
+                </button>
+            </div>
+
+            <!-- TAB: DASHBOARD & RELATÓRIOS -->
+            <div id="tab-dashboard" class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Lista de Submissões Recentes -->
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm lg:col-span-2 flex flex-col">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="font-bold text-lg text-slate-900">Atividades Enviadas pelos Alunos</h3>
+                                <p class="text-xs text-slate-500">Últimos envios recebidos</p>
+                            </div>
+                            <span class="bg-slate-100 text-slate-700 text-xs font-semibold px-2.5 py-1 rounded-lg" id="submission-count-badge">0 entregas</span>
+                        </div>
+
+                        <div class="overflow-x-auto custom-scrollbar flex-grow min-h-[300px]">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                        <th class="py-3 px-4">Aluno / Escola</th>
+                                        <th class="py-3 px-4">Atividade / Lista</th>
+                                        <th class="py-3 px-4 text-center">Acertos</th>
+                                        <th class="py-3 px-4 text-right">Data/Hora</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-submissions-body" class="divide-y divide-slate-100 text-sm text-slate-600">
+                                    <!-- Dinâmico -->
+                                    <tr>
+                                        <td colspan="4" class="py-8 text-center text-slate-400">
+                                            <div class="flex flex-col items-center gap-2">
+                                                <span class="text-3xl">📭</span>
+                                                <p>Nenhuma atividade enviada ainda. Crie uma lista e compartilhe o link com os alunos!</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Diagnóstico da Turma / Questões mais erradas -->
+                    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-lg text-slate-900 mb-2">Desempenho por Atividade</h3>
+                            <p class="text-xs text-slate-500 mb-6">Onde os alunos estão tendo mais dificuldades?</p>
+
+                            <div class="space-y-4" id="quiz-performance-chart">
+                                <!-- Preenchido dinamicamente com barras -->
+                                <p class="text-sm text-slate-400 py-8 text-center">Os relatórios de desempenho serão exibidos aqui à medida que os alunos responderem.</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-slate-100 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-3xl">
+                            <h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider mb-2">Dica do Panda</h4>
+                            <div class="flex items-start gap-3">
+                                <span class="text-xl">🐼</span>
+                                <p class="text-xs text-slate-600">Use as questões com menos de 60% de acertos para iniciar uma revisão de reforço na próxima aula.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: BANCO DE QUESTÕES -->
+            <div id="tab-questions" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-xl text-slate-900">Banco de Exercícios</h3>
+                        <p class="text-sm text-slate-500">Adicione, remova ou gerencie suas questões de matemática cadastradas.</p>
+                    </div>
+                    <button onclick="openModal('modal-add-question')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 rounded-2xl transition duration-200 shadow-lg shadow-indigo-100 flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Nova Questão
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="questions-grid">
+                    <!-- Dinâmico -->
+                </div>
+            </div>
+
+            <!-- TAB: GERAR / ENVIAR LISTA -->
+            <div id="tab-create-quiz" class="space-y-6 hidden">
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-xl text-slate-900 mb-2">Criar Atividade para Envio</h3>
+                    <p class="text-sm text-slate-500 mb-6">Selecione uma ou mais questões do seu banco de dados para gerar um link único para os alunos.</p>
+
+                    <form id="form-create-quiz" onsubmit="handleCreateQuiz(event)" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Título da Atividade</label>
+                            <input type="text" id="quiz-title" required placeholder="Ex: Lista de Equações de 1º Grau, Geometria Espacial" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-3">Selecione as Questões que farão parte desta lista:</label>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto custom-scrollbar p-1" id="quiz-questions-selection">
+                                <!-- Dinâmico com Checkboxes -->
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-100 flex justify-end">
+                            <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-200 shadow-lg shadow-emerald-100 flex items-center gap-2">
+                                <i class="fa-solid fa-link"></i> Gerar Atividade & Copiar Link
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Lista de Atividades/Links Gerados -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
+                    <h3 class="font-bold text-lg text-slate-900 mb-4">Atividades Ativas</h3>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-100 text-xs font-bold uppercase tracking-wider text-slate-400">
+                                    <th class="py-3 px-4">Nome da Atividade</th>
+                                    <th class="py-3 px-4">Nº de Questões</th>
+                                    <th class="py-3 px-4">Link Direto</th>
+                                    <th class="py-3 px-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-quizzes-body" class="divide-y divide-slate-100 text-sm text-slate-600">
+                                <!-- Dinâmico -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- VIEW: ALUNO (ATIVO POR PADRÃO)                 -->
+        <!-- ============================================== -->
+        <div id="view-student" class="max-w-2xl mx-auto space-y-8 animate-fade-in">
+            <!-- Boas vindas Aluno -->
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 opacity-20 text-8xl transform rotate-12">🐼</div>
+                <h1 class="font-panda font-bold text-2xl">Olá, estudante! 🚀</h1>
+                <p class="text-emerald-100 text-sm mt-1">Pronto para treinar sua mente com o PandaMath? Escolha uma atividade abaixo, informe seu nome, sua escola e comece.</p>
+            </div>
+
+            <!-- Card de login / Seleção de Atividade do Aluno -->
+            <div id="student-setup-card" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-6">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Qual é o seu nome completo?</label>
+                    <input type="text" id="student-name" placeholder="Digite o seu nome completo" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50">
+                </div>
+
+                <!-- CAMPO: Nome da Escola -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Qual é o nome da sua escola?</label>
+                    <input type="text" id="student-school" placeholder="Ex: Escola Estadual Thiago Binda" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Selecione a Atividade Indicada pelo Professor Thiago:</label>
+                    <select id="student-quiz-select" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50/50">
+                        <option value="">Selecione uma atividade...</option>
+                        <!-- Dinâmico -->
+                    </select>
+                </div>
+
+                <button onclick="goToPreparation()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-2xl transition duration-200 shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 text-lg">
+                    Avançar <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- TELA DE PREPARAÇÃO / CHECKLIST DO ESTUDANTE -->
+            <div id="student-prep-card" class="hidden bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-6 animate-fade-in">
+                <div class="text-center space-y-2">
+                    <span class="text-4xl">🐼</span>
+                    <h2 class="font-panda font-bold text-2xl text-slate-800">Tudo pronto para brilhar, <span id="student-prep-name" class="text-indigo-600">estudante</span>?</h2>
+                    <p class="text-sm text-slate-500">Antes de começarmos as contas de matemática, vamos garantir que tem tudo o que precisa para se concentrar ao máximo!</p>
+                </div>
+
+                <!-- @visual: Exemplo de imagem para motivar os alunos -->
+                <div class="my-2 w-full h-40 overflow-hidden rounded-2xl border border-slate-100 flex items-center justify-center">
+                    <img src="https://images.unsplash.com/photo-1453733190148-c44698c26578?auto=format&fit=crop&q=80&w=600" alt="Livro e óculos de estudo" class="h-40 w-full object-cover">
+                </div>
+
+                <!-- Mensagem Motivacional -->
+                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 space-y-3">
+                    <h3 class="font-bold text-indigo-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Mensagem do Panda para você:
+                    </h3>
+                    <p class="text-xs sm:text-sm text-indigo-950 leading-relaxed italic">
+                        "Errar faz parte de aprender! Cada cálculo que você faz exercita o seu cérebro e fortalece seu raciocínio. Não tenha pressa, leia cada pergunta com calma e confie no seu potencial! Boa sorte!" 🚀✨
+                    </p>
+                </div>
+
+                <!-- Checklist Interativo -->
+                <div class="space-y-4">
+                    <h3 class="font-bold text-sm text-slate-700 uppercase tracking-wider">Checklist de Estudo:</h3>
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" name="prep-checklist" onchange="validateChecklist()" class="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                            <div>
+                                <span class="font-semibold text-slate-800 text-sm">Material de escrita ✏️</span>
+                                <p class="text-xs text-slate-500">Estou com lápis e borracha prontos na mesa.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" name="prep-checklist" onchange="validateChecklist()" class="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                            <div>
+                                <span class="font-semibold text-slate-800 text-sm">Caderno ou Folha de Rascunho 📓</span>
+                                <p class="text-xs text-slate-500">Tenho papel à mão para estruturar meu raciocínio e fazer os cálculos.</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" name="prep-checklist" onchange="validateChecklist()" class="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300">
+                            <div>
+                                <span class="font-semibold text-slate-800 text-sm">Ambiente Agradável e Calmo 🎧</span>
+                                <p class="text-xs text-slate-500">Estou em um local bem iluminado, confortável e sem barulho para focar minha atenção.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4 border-t border-slate-100">
+                    <button onclick="goBackToSetup()" class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 px-4 rounded-xl transition text-sm">
+                        Voltar
+                    </button>
+                    <button id="btn-start-quiz" disabled onclick="startStudentQuiz()" class="w-2/3 bg-slate-300 text-slate-500 font-bold py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-2 text-base cursor-not-allowed">
+                        Tudo Pronto! Começar Atividade <i class="fa-solid fa-play"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- QUIZ DO ALUNO - INTERFACE DE RESOLUÇÃO (Escondida por defeito) -->
+            <div id="student-active-quiz" class="hidden space-y-6">
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 flex items-center justify-between shadow-sm">
+                    <div>
+                        <span class="text-xs text-slate-400 block font-semibold uppercase tracking-wider">Atividade Ativa</span>
+                        <h3 id="active-quiz-title" class="font-bold text-slate-800">Geometria e Proporções</h3>
+                    </div>
+                    <span id="active-quiz-progress" class="bg-indigo-50 text-indigo-700 text-xs font-extrabold px-3 py-1.5 rounded-full">Questão 1 de 5</span>
+                </div>
+
+                <!-- Card da Questão -->
+                <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md space-y-6 relative overflow-hidden">
+                    <div id="active-question-container" class="space-y-6">
+                        <!-- Enunciado, Imagem e Opções serão inseridos dinamicamente -->
+                    </div>
+
+                    <!-- Rodapé da Questão -->
+                    <div class="pt-6 border-t border-slate-100 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl" id="panda-helper-emoji">🐼</span>
+                            <p class="text-xs text-slate-500 italic" id="panda-helper-text">"Pense com calma! Tu consegues!"</p>
+                        </div>
+                        <button id="btn-next-question" onclick="submitAnswerAndNext()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl transition duration-200 flex items-center gap-2 shadow-lg shadow-indigo-100">
+                            Avançar <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTADO E FEEDBACK FINAL (Escondida por defeito) -->
+            <div id="student-results-card" class="hidden bg-white rounded-3xl p-8 border border-slate-200 shadow-md text-center space-y-6">
+                <div class="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-5xl shadow-inner animate-bounce">
+                    🎉
+                </div>
+                <div>
+                    <h2 class="font-panda font-bold text-3xl text-slate-900">Fantástico! Parabéns!</h2>
+                    <p class="text-slate-500 mt-1">Suas respostas foram enviadas para o Professor Thiago Binda.</p>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-6 max-w-sm mx-auto border border-slate-100">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Seu resultado</span>
+                    <div class="text-5xl font-extrabold font-panda text-indigo-600 mt-2" id="student-final-score">8 / 10</div>
+                    <p class="text-xs text-emerald-600 font-semibold mt-3" id="student-score-percentage">80% de acertos</p>
+                </div>
+
+                <div class="pt-4">
+                    <button onclick="resetStudentView()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-6 rounded-2xl transition duration-200">
+                        Voltar ao Menu Inicial
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© 2026 PandaMath. Desenvolvido para o Professor Thiago Binda.</p>
+        </div>
+    </footer>
+
+    <!-- ============================================== -->
+    <!-- MODALS                                         -->
+    <!-- ============================================== -->
+
+    <!-- MODAL DE AUTENTICAÇÃO DO PROFESSOR (ACESSO RESTRITO VIA FIREBASE AUTH) -->
+    <div id="modal-teacher-auth" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-slate-100 p-6 space-y-6 animate-fade-in">
+            <div class="text-center space-y-2">
+                <span class="text-4xl">🔐</span>
+                <h3 class="font-bold text-xl text-slate-900 font-panda">Área do Professor</h3>
+                <p class="text-sm text-slate-500">Acesse com o e-mail e a senha cadastrados no Firebase Authentication.</p>
+            </div>
+            <form id="form-teacher-auth" onsubmit="handleTeacherAuth(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">E-mail do professor</label>
+                    <input type="email" id="teacher-email" placeholder="professor@email.com" autocomplete="username" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Senha</label>
+                    <input type="password" id="teacher-password" placeholder="Digite sua senha" autocomplete="current-password" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                </div>
+                <div class="bg-amber-50 border border-amber-100 rounded-2xl p-3 text-xs text-amber-800 leading-relaxed">
+                    A conta precisa existir no Firebase Authentication e o UID do professor precisa estar liberado na coleção <strong>admins</strong>.
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeModal('modal-teacher-auth')" class="w-1/2 px-4 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold transition">Cancelar</button>
+                    <button type="submit" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl transition shadow-md shadow-indigo-100">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD QUESTION -->
+    <div id="modal-add-question" class="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col">
+            <!-- Header -->
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">📝</span>
+                    <h3 class="font-bold text-lg text-slate-900">Registrar Nova Questão</h3>
+                </div>
+                <button onclick="closeModal('modal-add-question')" class="text-slate-400 hover:text-slate-600 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Form -->
+            <form id="form-add-question" onsubmit="handleSaveQuestion(event)" class="p-6 space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Tópico de Matemática</label>
+                        <select id="question-topic" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50">
+                            <option value="Álgebra">Álgebra</option>
+                            <option value="Geometria">Geometria</option>
+                            <option value="Aritmética">Aritmética</option>
+                            <option value="Estatística">Estatística / Probabilidade</option>
+                            <option value="Fração">Fração / Razão</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Dificuldade</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <label class="border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 transition font-semibold text-sm">
+                                <input type="radio" name="difficulty" value="Fácil" checked class="accent-indigo-600"> Fácil
+                            </label>
+                            <label class="border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 transition font-semibold text-sm">
+                                <input type="radio" name="difficulty" value="Médio" class="accent-indigo-600"> Médio
+                            </label>
+                            <label class="border border-slate-200 rounded-xl p-3 flex items-center justify-center gap-2 cursor-pointer hover:bg-slate-50 transition font-semibold text-sm">
+                                <input type="radio" name="difficulty" value="Difícil" class="accent-indigo-600"> Difícil
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Campo de Imagem -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2 flex items-center justify-between">
+                        <span>URL da Imagem da Questão (opcional)</span>
+                        <span class="text-xs text-slate-400 font-normal">Insira um link de imagem (Ex: de diagramas ou figuras)</span>
+                    </label>
+                    <input type="url" id="question-image" placeholder="https://exemplo.com/figura.png" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Enunciado da Questão</label>
+                    <textarea id="question-text" required rows="4" placeholder="Escreva a pergunta da questão..." class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50"></textarea>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="block text-sm font-bold text-slate-700">Alternativas e Resposta Correta</label>
+                    <p class="text-xs text-slate-500 -mt-2">Escreva o texto para cada alternativa e marque a resposta correta.</p>
+
+                    <div class="space-y-3">
+                        <!-- Alternativa A -->
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="correct-option" value="A" checked class="w-5 h-5 accent-indigo-600 cursor-pointer">
+                            <input type="text" id="option-a" required placeholder="Texto da Alternativa A" class="flex-grow px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50">
+                        </div>
+                        <!-- Alternativa B -->
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="correct-option" value="B" class="w-5 h-5 accent-indigo-600 cursor-pointer">
+                            <input type="text" id="option-b" required placeholder="Texto da Alternativa B" class="flex-grow px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50">
+                        </div>
+                        <!-- Alternativa C -->
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="correct-option" value="C" class="w-5 h-5 accent-indigo-600 cursor-pointer">
+                            <input type="text" id="option-c" required placeholder="Texto da Alternativa C" class="flex-grow px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50">
+                        </div>
+                        <!-- Alternativa D -->
+                        <div class="flex items-center gap-3">
+                            <input type="radio" name="correct-option" value="D" class="w-5 h-5 accent-indigo-600 cursor-pointer">
+                            <input type="text" id="option-d" required placeholder="Texto da Alternativa D" class="flex-grow px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50/50">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('modal-add-question')" class="px-5 py-2.5 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold transition">Cancelar</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-md shadow-indigo-100">Salvar Questão</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOAST DE NOTIFICAÇÃO -->
+    <div id="toast-message" class="fixed bottom-5 right-5 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-xl z-50 flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <span id="toast-icon">✨</span>
+        <span id="toast-text" class="text-sm font-semibold">Tudo pronto!</span>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- LOGICA SCRIPT COM FIRESTORE INTEGRADO          -->
+    <!-- ============================================== -->
+    <script type="module">
+        // =========================================================
+        // PANDA MATH - VERSÃO PARA USO REAL COM FIREBASE
+        // Ajuste obrigatório antes de publicar:
+        // 1) Criar projeto no Firebase.
+        // 2) Ativar Authentication: Email/Senha e Anônimo.
+        // 3) Criar Cloud Firestore.
+        // 4) Colar abaixo a configuração Web do seu projeto Firebase.
+        // 5) Publicar as regras de segurança do Firestore enviadas junto com este HTML.
+        // =========================================================
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import {
+            getAuth,
+            signInAnonymously,
+            signInWithCustomToken,
+            signInWithEmailAndPassword,
+            onAuthStateChanged,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            getFirestore,
+            doc,
+            getDoc,
+            collection,
+            addDoc,
+            onSnapshot,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // COLE AQUI A CONFIGURAÇÃO WEB DO FIREBASE.
+        // Firebase Console > Project settings > General > Your apps > Web app > SDK setup and configuration.
+        const firebaseConfigManual = {
+            apiKey: "AIzaSyB-TsisjFc3dPwdmE9x4uKBARXUII9l3LE",
+            authDomain: "pandamath-c46eb.firebaseapp.com",
+            projectId: "pandamath-c46eb",
+            storageBucket: "pandamath-c46eb.firebasestorage.app",
+            messagingSenderId: "1013879265310",
+            appId: "1:1013879265310:web:5c6690fea63fa34390b60f"
+        };
+
+        function getRuntimeFirebaseConfig() {
+            if (firebaseConfigManual.apiKey && firebaseConfigManual.projectId) {
+                return firebaseConfigManual;
+            }
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    return JSON.parse(__firebase_config);
+                } catch (error) {
+                    console.error("Configuração Firebase injetada inválida:", error);
+                }
+            }
+            return null;
+        }
+
+        const runtimeFirebaseConfig = getRuntimeFirebaseConfig();
+        const appId = (typeof __app_id !== 'undefined' && __app_id)
+            ? __app_id
+            : (runtimeFirebaseConfig?.projectId || 'pandamath-thiago-binda');
+
+        let db = null;
+        let auth = null;
+        let user = null;
+        let isTeacherAuthenticated = false;
+        let unsubscribeListeners = [];
+        const isFirebaseConfigured = !!runtimeFirebaseConfig;
+
+        let appState = {
+            questions: [],
+            quizzes: [],
+            submissions: []
+        };
+
+        const defaultQuestions = [
+            {
+                id: "q_default_1",
+                topic: "Aritmética",
+                difficulty: "Fácil",
+                imageUrl: "",
+                text: "Uma caixa de giz de matemática tem 24 unidades. Se o Professor Thiago usar 1/3 dos gizes numa aula, quantos gizes sobraram na caixa?",
+                options: { A: "8 gizes", B: "16 gizes", C: "12 gizes", D: "20 gizes" },
+                correct: "B"
+            },
+            {
+                id: "q_default_2",
+                topic: "Geometria",
+                difficulty: "Médio",
+                imageUrl: "https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&q=80&w=400",
+                text: "Se um triângulo equilátero tem um perímetro de 18 cm, qual é a medida de cada um dos seus lados?",
+                options: { A: "3 cm", B: "9 cm", C: "6 cm", D: "12 cm" },
+                correct: "C"
+            },
+            {
+                id: "q_default_3",
+                topic: "Álgebra",
+                difficulty: "Médio",
+                imageUrl: "",
+                text: "Qual é o valor de x na equação matemática simples: 3x - 7 = 11?",
+                options: { A: "x = 4", B: "x = 5", C: "x = 6", D: "x = 8" },
+                correct: "C"
+            }
+        ];
+
+        // =========================================================
+        // SEGURANÇA DE RENDERIZAÇÃO / UTILITÁRIOS
+        // =========================================================
+        function escapeHTML(value) {
+            return String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+        }
+
+        function escapeAttr(value) {
+            return escapeHTML(value).replaceAll("`", "&#096;");
+        }
+
+        function escapeJS(value) {
+            return String(value ?? "")
+                .replace(/\\/g, "\\\\")
+                .replace(/'/g, "\\'")
+                .replace(/\n/g, "\\n")
+                .replace(/\r/g, "");
+        }
+
+        function safeImageUrl(value) {
+            const raw = String(value ?? "").trim();
+            if (!raw) return "";
+            try {
+                const parsed = new URL(raw);
+                return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : "";
+            } catch {
+                return "";
+            }
+        }
+
+        function normalizeKey(value) {
+            return String(value ?? "")
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "");
+        }
+
+        function setStatusBadge(type, text) {
+            const statusBadge = document.getElementById('db-status-badge');
+            const styles = {
+                loading: "px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 flex items-center gap-2",
+                ok: "px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 flex items-center gap-2",
+                local: "px-3 py-1 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 flex items-center gap-2",
+                error: "px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 flex items-center gap-2"
+            };
+            const dot = type === "loading"
+                ? `<span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>`
+                : `<span class="w-2.5 h-2.5 rounded-full ${type === 'error' ? 'bg-rose-500' : type === 'local' ? 'bg-indigo-500' : 'bg-emerald-500'}"></span>`;
+            statusBadge.className = styles[type] || styles.loading;
+            statusBadge.innerHTML = `${dot} ${escapeHTML(text)}`;
+        }
+
+        function requireTeacher() {
+            if (!isFirebaseConfigured) {
+                showToast("Configure o Firebase para usar a área do professor em produção.", "⚠️");
+                return false;
+            }
+            if (!isTeacherAuthenticated) {
+                showToast("Faça login como professor autorizado para executar esta ação.", "🔐");
+                openModal('modal-teacher-auth');
+                return false;
+            }
+            return true;
+        }
+
+        async function checkTeacherAccess(firebaseUser) {
+            if (!db || !firebaseUser || firebaseUser.isAnonymous) return false;
+            try {
+                const adminRef = doc(db, 'artifacts', appId, 'admins', firebaseUser.uid);
+                const adminSnap = await getDoc(adminRef);
+                return adminSnap.exists();
+            } catch (error) {
+                console.warn("Não foi possível validar o perfil de professor:", error);
+                return false;
+            }
+        }
+
+        function cleanupRealtimeListeners() {
+            unsubscribeListeners.forEach(unsub => {
+                try { unsub(); } catch (_) { /* noop */ }
+            });
+            unsubscribeListeners = [];
+        }
+
+        // =========================================================
+        // INICIALIZAÇÃO FIREBASE / MODO LOCAL
+        // =========================================================
+        async function initApp() {
+            setStatusBadge("loading", "Conectando ao banco de dados...");
+
+            if (isFirebaseConfigured) {
+                try {
+                    const app = initializeApp(runtimeFirebaseConfig);
+                    auth = getAuth(app);
+                    db = getFirestore(app);
+
+                    onAuthStateChanged(auth, async (firebaseUser) => {
+                        user = firebaseUser;
+                        isTeacherAuthenticated = await checkTeacherAccess(firebaseUser);
+
+                        if (firebaseUser) {
+                            setStatusBadge(
+                                "ok",
+                                isTeacherAuthenticated
+                                    ? "Conectado à nuvem como professor"
+                                    : "Conectado à nuvem como aluno"
+                            );
+                            setupRealtimeListeners();
+                        }
+                    });
+
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else if (!auth.currentUser) {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Erro na inicialização do Firebase:", error);
+                    showToast("Falha ao conectar ao Firebase. Usando modo local de demonstração.", "⚠️");
+                    setupLocalStorageFallback();
+                }
+            } else {
+                setupLocalStorageFallback();
+            }
+        }
+
+        function setupRealtimeListeners() {
+            if (!user || !db) return;
+            cleanupRealtimeListeners();
+
+            const questionsCol = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+            const quizzesCol = collection(db, 'artifacts', appId, 'public', 'data', 'quizzes');
+            const submissionsCol = collection(db, 'artifacts', appId, 'public', 'data', 'submissions');
+
+            const unsubQuestions = onSnapshot(questionsCol, async (snapshot) => {
+                const list = [];
+                snapshot.forEach(docSnap => list.push({ id: docSnap.id, ...docSnap.data() }));
+
+                if (list.length === 0 && isTeacherAuthenticated) {
+                    for (const q of defaultQuestions) {
+                        await addDoc(questionsCol, {
+                            topic: q.topic,
+                            difficulty: q.difficulty,
+                            imageUrl: q.imageUrl,
+                            text: q.text,
+                            options: q.options,
+                            correct: q.correct,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                    return;
+                }
+
+                appState.questions = list;
+                updateAppUI();
+            }, (error) => {
+                console.error(error);
+                showToast("Erro ao sincronizar questões. Verifique as regras do Firestore.", "❌");
+            });
+
+            const unsubQuizzes = onSnapshot(quizzesCol, (snapshot) => {
+                const list = [];
+                snapshot.forEach(docSnap => list.push({ id: docSnap.id, ...docSnap.data() }));
+                appState.quizzes = list;
+                updateAppUI();
+            }, (error) => {
+                console.error(error);
+                showToast("Erro ao sincronizar atividades. Verifique as regras do Firestore.", "❌");
+            });
+
+            unsubscribeListeners.push(unsubQuestions, unsubQuizzes);
+
+            if (isTeacherAuthenticated) {
+                const unsubSubmissions = onSnapshot(submissionsCol, (snapshot) => {
+                    const list = [];
+                    snapshot.forEach(docSnap => list.push({ id: docSnap.id, ...docSnap.data() }));
+                    appState.submissions = list;
+                    updateAppUI();
+                }, (error) => {
+                    console.error(error);
+                    showToast("Erro ao sincronizar entregas. Verifique as regras do Firestore.", "❌");
+                });
+                unsubscribeListeners.push(unsubSubmissions);
+            } else {
+                appState.submissions = [];
+                updateAppUI();
+            }
+        }
+
+        function setupLocalStorageFallback() {
+            setStatusBadge("local", "Modo local de demonstração — dados salvos somente neste navegador");
+
+            const savedQuestions = localStorage.getItem('pandamath_questions');
+            const savedQuizzes = localStorage.getItem('pandamath_quizzes');
+            const savedSubmissions = localStorage.getItem('pandamath_submissions');
+
+            appState.questions = savedQuestions ? JSON.parse(savedQuestions) : defaultQuestions;
+            appState.quizzes = savedQuizzes ? JSON.parse(savedQuizzes) : [];
+            appState.submissions = savedSubmissions ? JSON.parse(savedSubmissions) : [];
+
+            updateAppUI();
+        }
+
+        function saveToLocalFallback() {
+            if (!isFirebaseConfigured) {
+                localStorage.setItem('pandamath_questions', JSON.stringify(appState.questions));
+                localStorage.setItem('pandamath_quizzes', JSON.stringify(appState.quizzes));
+                localStorage.setItem('pandamath_submissions', JSON.stringify(appState.submissions));
+                updateAppUI();
+            }
+        }
+
+        // =========================================================
+        // CONTROLE DO BANCO DE QUESTÕES
+        // =========================================================
+        window.handleSaveQuestion = async function(e) {
+            e.preventDefault();
+            if (!requireTeacher()) return;
+
+            const topic = document.getElementById('question-topic').value;
+            const text = document.getElementById('question-text').value.trim();
+            const diff = document.querySelector('input[name="difficulty"]:checked').value;
+            const correct = document.querySelector('input[name="correct-option"]:checked').value;
+            const imageUrl = safeImageUrl(document.getElementById('question-image').value);
+
+            const options = {
+                A: document.getElementById('option-a').value.trim(),
+                B: document.getElementById('option-b').value.trim(),
+                C: document.getElementById('option-c').value.trim(),
+                D: document.getElementById('option-d').value.trim()
+            };
+
+            if (!text || Object.values(options).some(v => !v)) {
+                showToast("Preencha o enunciado e todas as alternativas.", "⚠️");
+                return;
+            }
+
+            const newQuestion = {
+                topic,
+                difficulty: diff,
+                text,
+                imageUrl,
+                options,
+                correct,
+                createdByUid: user?.uid || null,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const col = collection(db, 'artifacts', appId, 'public', 'data', 'questions');
+                await addDoc(col, newQuestion);
+                showToast("Questão salva na nuvem.", "🐼");
+                closeModal('modal-add-question');
+                document.getElementById('form-add-question').reset();
+            } catch (err) {
+                console.error(err);
+                showToast("Erro ao salvar questão. Verifique permissões do Firestore.", "❌");
+            }
+        };
+
+        window.deleteQuestion = async function(id) {
+            if (!requireTeacher()) return;
+            if (!confirm("Deseja remover esta questão?")) return;
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'questions', id);
+                await deleteDoc(docRef);
+                showToast("Questão removida.", "🗑️");
+            } catch (err) {
+                console.error(err);
+                showToast("Erro ao deletar questão. Verifique permissões do Firestore.", "❌");
+            }
+        };
+
+        // =========================================================
+        // GESTÃO DE ATIVIDADES E LISTAS
+        // =========================================================
+        window.handleCreateQuiz = async function(e) {
+            e.preventDefault();
+            if (!requireTeacher()) return;
+
+            const title = document.getElementById('quiz-title').value.trim();
+            const selectedBoxes = document.querySelectorAll('input[name="quiz-q-select"]:checked');
+
+            if (!title) {
+                showToast("Informe o título da atividade.", "⚠️");
+                return;
+            }
+            if (selectedBoxes.length === 0) {
+                showToast("Selecione pelo menos uma questão.", "⚠️");
+                return;
+            }
+
+            const questionIds = Array.from(selectedBoxes).map(cb => cb.value);
+
+            const newQuiz = {
+                title,
+                questionIds,
+                active: true,
+                createdByUid: user?.uid || null,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                const col = collection(db, 'artifacts', appId, 'public', 'data', 'quizzes');
+                await addDoc(col, newQuiz);
+                document.getElementById('form-create-quiz').reset();
+                showToast("Atividade criada. Copie o link e envie aos alunos.", "🚀");
+            } catch (err) {
+                console.error(err);
+                showToast("Erro ao criar atividade. Verifique permissões do Firestore.", "❌");
+            }
+        };
+
+        window.copyQuizLink = async function(quizId) {
+            const realUrl = `${window.location.origin}${window.location.pathname}?quiz=${encodeURIComponent(quizId)}`;
+
+            try {
+                await navigator.clipboard.writeText(realUrl);
+            } catch (_) {
+                const tempInput = document.createElement("input");
+                tempInput.value = realUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+            }
+
+            showToast("Link real da atividade copiado.", "📎");
+        };
+
+        window.deleteQuiz = async function(id) {
+            if (!requireTeacher()) return;
+            if (!confirm("Deseja remover esta atividade?")) return;
+
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'quizzes', id);
+                await deleteDoc(docRef);
+                showToast("Atividade removida.", "🗑️");
+            } catch (err) {
+                console.error(err);
+                showToast("Erro ao remover atividade. Verifique permissões do Firestore.", "❌");
+            }
+        };
+
+        // =========================================================
+        // SISTEMA DE RESOLUÇÃO DO ALUNO
+        // =========================================================
+        let studentState = {
+            activeQuiz: null,
+            currentQuestionIndex: 0,
+            answers: {},
+            studentName: "",
+            studentSchool: ""
+        };
+
+        window.goToPreparation = function() {
+            const name = document.getElementById('student-name').value.trim();
+            const school = document.getElementById('student-school').value.trim();
+            const quizId = document.getElementById('student-quiz-select').value;
+
+            if (!name) {
+                showToast("Informe seu nome para começar.", "⚠️");
+                return;
+            }
+            if (!school) {
+                showToast("Informe o nome da sua escola para começar.", "⚠️");
+                return;
+            }
+            if (!quizId) {
+                showToast("Selecione uma atividade.", "⚠️");
+                return;
+            }
+
+            const selectedQuiz = appState.quizzes.find(q => q.id === quizId);
+            if (!selectedQuiz) {
+                showToast("Atividade não encontrada. Atualize a página e tente novamente.", "❌");
+                return;
+            }
+
+            const submissionKey = `pandamath_submitted_${quizId}_${normalizeKey(name)}_${normalizeKey(school)}`;
+            if (localStorage.getItem(submissionKey)) {
+                showToast("Esta atividade já foi enviada neste navegador.", "⚠️");
+                return;
+            }
+
+            studentState.studentName = name;
+            studentState.studentSchool = school;
+            studentState.activeQuiz = selectedQuiz;
+
+            document.getElementById('student-prep-name').textContent = name;
+            document.getElementById('student-setup-card').classList.add('hidden');
+            document.getElementById('student-prep-card').classList.remove('hidden');
+
+            const checkboxes = document.querySelectorAll('input[name="prep-checklist"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            validateChecklist();
+        };
+
+        window.goBackToSetup = function() {
+            document.getElementById('student-prep-card').classList.add('hidden');
+            document.getElementById('student-setup-card').classList.remove('hidden');
+        };
+
+        window.validateChecklist = function() {
+            const checkboxes = document.querySelectorAll('input[name="prep-checklist"]');
+            const btn = document.getElementById('btn-start-quiz');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+            if (allChecked) {
+                btn.removeAttribute('disabled');
+                btn.className = "w-2/3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-2 text-base cursor-pointer shadow-md";
+            } else {
+                btn.setAttribute('disabled', 'true');
+                btn.className = "w-2/3 bg-slate-300 text-slate-500 font-bold py-3.5 px-6 rounded-xl transition flex items-center justify-center gap-2 text-base cursor-not-allowed";
+            }
+        };
+
+        window.startStudentQuiz = function() {
+            studentState.currentQuestionIndex = 0;
+            studentState.answers = {};
+
+            document.getElementById('student-prep-card').classList.add('hidden');
+            document.getElementById('student-active-quiz').classList.remove('hidden');
+
+            renderStudentQuestion();
+        };
+
+        function renderStudentQuestion() {
+            const quiz = studentState.activeQuiz;
+            const index = studentState.currentQuestionIndex;
+            const total = quiz.questionIds.length;
+
+            document.getElementById('active-quiz-title').textContent = quiz.title;
+            document.getElementById('active-quiz-progress').textContent = `Questão ${index + 1} de ${total}`;
+
+            const qId = quiz.questionIds[index];
+            const question = appState.questions.find(q => q.id === qId);
+
+            if (!question) {
+                showToast("Questão não encontrada no banco de dados.", "❌");
+                return;
+            }
+
+            const pandaPhrases = [
+                "Lembre-se: leia o enunciado com atenção.",
+                "Você consegue. A matemática é um quebra-cabeça.",
+                "Dica do Panda: faça as contas em uma folha de rascunho primeiro.",
+                "Não tenha pressa. O importante é compreender o processo.",
+                "Atenção aos pequenos detalhes dos sinais."
+            ];
+            document.getElementById('panda-helper-text').textContent = `"${pandaPhrases[index % pandaPhrases.length]}"`;
+
+            const container = document.getElementById('active-question-container');
+            const imageUrl = safeImageUrl(question.imageUrl);
+
+            let imageHtml = "";
+            if (imageUrl) {
+                imageHtml = `
+                    <div class="w-full max-h-[250px] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center">
+                        <img src="${escapeAttr(imageUrl)}" alt="Figura da questão" onerror="this.parentElement.style.display='none'" class="max-h-[250px] object-contain">
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <span class="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold uppercase tracking-wider">${escapeHTML(question.topic)}</span>
+                    <p class="text-lg font-semibold text-slate-800 leading-relaxed">${escapeHTML(question.text)}</p>
+                </div>
+
+                ${imageHtml}
+
+                <div class="space-y-3" id="student-options-list">
+                    ${Object.entries(question.options || {}).map(([key, value]) => `
+                        <button onclick="selectStudentOption('${escapeJS(key)}')" id="btn-opt-${escapeAttr(key)}" class="w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-500 hover:bg-slate-50 font-medium transition flex items-center gap-4">
+                            <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600 transition">${escapeHTML(key)}</span>
+                            <span class="text-slate-700">${escapeHTML(value)}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+
+            if (studentState.answers[qId]) {
+                selectStudentOption(studentState.answers[qId]);
+            }
+        }
+
+        window.selectStudentOption = function(option) {
+            const quiz = studentState.activeQuiz;
+            const qId = quiz.questionIds[studentState.currentQuestionIndex];
+            studentState.answers[qId] = option;
+
+            const options = ['A', 'B', 'C', 'D'];
+            options.forEach(opt => {
+                const btn = document.getElementById(`btn-opt-${opt}`);
+                if (btn) {
+                    btn.classList.remove('border-indigo-600', 'bg-indigo-50/50');
+                    btn.classList.add('border-slate-200');
+                    btn.children[0].classList.remove('bg-indigo-600', 'text-white');
+                    btn.children[0].classList.add('bg-slate-100', 'text-slate-600');
+                }
+            });
+
+            const selectedBtn = document.getElementById(`btn-opt-${option}`);
+            if (selectedBtn) {
+                selectedBtn.classList.remove('border-slate-200');
+                selectedBtn.classList.add('border-indigo-600', 'bg-indigo-50/50');
+                selectedBtn.children[0].classList.remove('bg-slate-100', 'text-slate-600');
+                selectedBtn.children[0].classList.add('bg-indigo-600', 'text-white');
+            }
+        };
+
+        window.submitAnswerAndNext = async function() {
+            const quiz = studentState.activeQuiz;
+            const qId = quiz.questionIds[studentState.currentQuestionIndex];
+
+            if (!studentState.answers[qId]) {
+                showToast("Selecione uma opção antes de avançar.", "⚠️");
+                return;
+            }
+
+            if (studentState.currentQuestionIndex < quiz.questionIds.length - 1) {
+                studentState.currentQuestionIndex++;
+                renderStudentQuestion();
+            } else {
+                await finishAndSubmitQuiz();
+            }
+        };
+
+        async function finishAndSubmitQuiz() {
+            const quiz = studentState.activeQuiz;
+            const submissionKey = `pandamath_submitted_${quiz.id}_${normalizeKey(studentState.studentName)}_${normalizeKey(studentState.studentSchool)}`;
+
+            if (localStorage.getItem(submissionKey)) {
+                showToast("Esta atividade já foi enviada neste navegador.", "⚠️");
+                return;
+            }
+
+            let correctCount = 0;
+            quiz.questionIds.forEach(qId => {
+                const question = appState.questions.find(q => q.id === qId);
+                if (question && studentState.answers[qId] === question.correct) {
+                    correctCount++;
+                }
+            });
+
+            const submission = {
+                studentName: studentState.studentName,
+                studentSchool: studentState.studentSchool,
+                studentKey: `${normalizeKey(studentState.studentName)}_${normalizeKey(studentState.studentSchool)}`,
+                quizId: quiz.id,
+                quizTitle: quiz.title,
+                score: correctCount,
+                totalQuestions: quiz.questionIds.length,
+                answers: studentState.answers,
+                createdByUid: user?.uid || null,
+                createdAt: new Date().toISOString()
+            };
+
+            try {
+                if (isFirebaseConfigured && db && user) {
+                    const col = collection(db, 'artifacts', appId, 'public', 'data', 'submissions');
+                    await addDoc(col, submission);
+                    showToast("Atividade enviada ao professor.", "🎉");
+                } else {
+                    submission.id = 'sub_' + Date.now();
+                    appState.submissions.push(submission);
+                    saveToLocalFallback();
+                    showToast("Atividade salva localmente.", "🎉");
+                }
+
+                localStorage.setItem(submissionKey, new Date().toISOString());
+                document.getElementById('student-active-quiz').classList.add('hidden');
+                document.getElementById('student-results-card').classList.remove('hidden');
+                document.getElementById('student-final-score').textContent = `${correctCount} / ${quiz.questionIds.length}`;
+
+                const pct = Math.round((correctCount / quiz.questionIds.length) * 100);
+                document.getElementById('student-score-percentage').textContent = `${pct}% de acertos`;
+            } catch (err) {
+                console.error(err);
+                showToast("Erro ao enviar respostas. Verifique a conexão e tente novamente.", "❌");
+            }
+        }
+
+        window.resetStudentView = function() {
+            document.getElementById('student-results-card').classList.add('hidden');
+            document.getElementById('student-setup-card').classList.remove('hidden');
+            document.getElementById('student-name').value = "";
+            document.getElementById('student-school').value = "";
+            document.getElementById('student-quiz-select').value = "";
+        };
+
+        // =========================================================
+        // SEGURANÇA E AUTH DO PROFESSOR
+        // =========================================================
+        window.handleTeacherAuth = async function(e) {
+            e.preventDefault();
+
+            if (!isFirebaseConfigured || !auth || !db) {
+                showToast("Para uso real, configure o Firebase no código antes de acessar o professor.", "⚠️");
+                return;
+            }
+
+            const emailInput = document.getElementById('teacher-email');
+            const passwordInput = document.getElementById('teacher-password');
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            try {
+                const credential = await signInWithEmailAndPassword(auth, email, password);
+                const allowed = await checkTeacherAccess(credential.user);
+
+                if (!allowed) {
+                    await signOut(auth);
+                    await signInAnonymously(auth);
+                    showToast("Conta autenticada, mas sem permissão de professor no Firestore.", "❌");
+                    return;
+                }
+
+                isTeacherAuthenticated = true;
+                closeModal('modal-teacher-auth');
+                proceedToTeacherView();
+                showToast("Acesso autorizado.", "🔑");
+                passwordInput.value = '';
+            } catch (error) {
+                console.error(error);
+                showToast("E-mail ou senha inválidos, ou Authentication não habilitado.", "❌");
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        };
+
+        window.logoutTeacher = async function() {
+            if (auth) {
+                try {
+                    await signOut(auth);
+                    if (isFirebaseConfigured) await signInAnonymously(auth);
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+            isTeacherAuthenticated = false;
+            proceedToStudentView();
+            showToast("Sessão do professor encerrada.", "🔒");
+        };
+
+        window.switchView = function(view) {
+            if (view === 'teacher') {
+                if (isTeacherAuthenticated) {
+                    proceedToTeacherView();
+                    return;
+                }
+                openModal('modal-teacher-auth');
+                setTimeout(() => {
+                    const emailField = document.getElementById('teacher-email');
+                    if (emailField) emailField.focus();
+                }, 150);
+            } else {
+                proceedToStudentView();
+            }
+        };
+
+        window.switchTeacherTab = function(tabId) {
+            const tabs = ['tab-dashboard', 'tab-questions', 'tab-create-quiz'];
+            tabs.forEach(t => document.getElementById(t).classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            tabs.forEach(t => {
+                const btn = document.getElementById(`btn-${t}`);
+                if (btn) {
+                    if (t === tabId) {
+                        btn.className = "border-b-2 border-indigo-600 pb-4 px-1 text-sm font-bold text-indigo-600 whitespace-nowrap flex items-center gap-2";
+                    } else {
+                        btn.className = "border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-800 whitespace-nowrap flex items-center gap-2";
+                    }
+                }
+            });
+        };
+
+        function proceedToTeacherView() {
+            document.getElementById('view-teacher').classList.remove('hidden');
+            document.getElementById('view-student').classList.add('hidden');
+
+            const btnTeacher = document.getElementById('btn-mode-teacher');
+            const btnStudent = document.getElementById('btn-mode-student');
+
+            btnTeacher.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 bg-white text-indigo-600 shadow-sm flex items-center gap-2";
+            btnStudent.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center gap-2";
+        }
+
+        function proceedToStudentView() {
+            document.getElementById('view-teacher').classList.add('hidden');
+            document.getElementById('view-student').classList.remove('hidden');
+
+            const btnTeacher = document.getElementById('btn-mode-teacher');
+            const btnStudent = document.getElementById('btn-mode-student');
+
+            btnTeacher.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center gap-2";
+            btnStudent.className = "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 bg-white text-emerald-600 shadow-sm flex items-center gap-2";
+        }
+
+        // =========================================================
+        // ATUALIZAÇÃO DA INTERFACE DO USUÁRIO
+        // =========================================================
+        function updateAppUI() {
+            const totalQuestions = appState.questions.length;
+            const totalQuizzes = appState.quizzes.length;
+            const totalSubmissions = appState.submissions.length;
+
+            let averageScore = 0;
+            if (totalSubmissions > 0) {
+                const totalPct = appState.submissions.reduce((acc, sub) => acc + (sub.score / sub.totalQuestions), 0);
+                averageScore = Math.round((totalPct / totalSubmissions) * 100);
+            }
+
+            document.getElementById('stat-total-questions').textContent = totalQuestions;
+            document.getElementById('stat-total-quizzes').textContent = totalQuizzes;
+            document.getElementById('stat-total-submissions').textContent = totalSubmissions;
+            document.getElementById('stat-average-score').textContent = `${averageScore}%`;
+            document.getElementById('submission-count-badge').textContent = `${totalSubmissions} entregas`;
+
+            const subBody = document.getElementById('table-submissions-body');
+            if (appState.submissions.length === 0) {
+                subBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-slate-400">
+                            <div class="flex flex-col items-center gap-2">
+                                <span class="text-3xl">📭</span>
+                                <p>Nenhuma entrega registrada ainda.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            } else {
+                const sortedSubmissions = [...appState.submissions].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                subBody.innerHTML = sortedSubmissions.map(sub => {
+                    const pct = Math.round((sub.score / sub.totalQuestions) * 100);
+                    let badgeClass = "bg-rose-50 text-rose-700 border border-rose-200";
+                    if (pct >= 80) badgeClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+                    else if (pct >= 60) badgeClass = "bg-amber-50 text-amber-700 border border-amber-200";
+
+                    const formattedDate = new Date(sub.createdAt).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+                    const schoolName = sub.studentSchool || "Não informada";
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-4 px-4">
+                                <div class="font-semibold text-slate-800">${escapeHTML(sub.studentName)}</div>
+                                <div class="text-xs text-indigo-600 font-medium flex items-center gap-1 mt-0.5">
+                                    <i class="fa-solid fa-school text-[10px]"></i> ${escapeHTML(schoolName)}
+                                </div>
+                            </td>
+                            <td class="py-4 px-4 font-medium text-slate-600">${escapeHTML(sub.quizTitle)}</td>
+                            <td class="py-4 px-4 text-center">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeClass}">${escapeHTML(sub.score)} / ${escapeHTML(sub.totalQuestions)} (${pct}%)</span>
+                            </td>
+                            <td class="py-4 px-4 text-right text-xs text-slate-400">${escapeHTML(formattedDate)}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            const performanceChart = document.getElementById('quiz-performance-chart');
+            if (appState.quizzes.length === 0) {
+                performanceChart.innerHTML = `<p class="text-sm text-slate-400 py-8 text-center">Nenhuma atividade criada para relatórios.</p>`;
+            } else {
+                performanceChart.innerHTML = appState.quizzes.map(quiz => {
+                    const quizSubmissions = appState.submissions.filter(sub => sub.quizId === quiz.id);
+                    let pct = 0;
+                    if (quizSubmissions.length > 0) {
+                        const totalPct = quizSubmissions.reduce((acc, sub) => acc + (sub.score / sub.totalQuestions), 0);
+                        pct = Math.round((totalPct / quizSubmissions.length) * 100);
+                    }
+
+                    const barColor = pct >= 80 ? 'bg-emerald-500' : (pct >= 50 ? 'bg-indigo-500' : 'bg-rose-500');
+
+                    return `
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-semibold gap-3">
+                                <span class="text-slate-700 truncate max-w-[200px]">${escapeHTML(quiz.title)}</span>
+                                <span class="text-slate-500 whitespace-nowrap">${quizSubmissions.length} respostas | Média: ${pct}%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                                <div class="${barColor} h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const questionsGrid = document.getElementById('questions-grid');
+            if (appState.questions.length === 0) {
+                questionsGrid.innerHTML = `
+                    <div class="col-span-full py-12 text-center text-slate-400">
+                        <p>Nenhuma questão registrada. Clique em "Nova Questão".</p>
+                    </div>
+                `;
+            } else {
+                questionsGrid.innerHTML = appState.questions.map(q => {
+                    const imageUrl = safeImageUrl(q.imageUrl);
+                    let imageSnippet = "";
+                    if (imageUrl) {
+                        imageSnippet = `
+                            <div class="my-3 w-full h-32 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-center">
+                                <img src="${escapeAttr(imageUrl)}" alt="Figura da questão" onerror="this.parentElement.style.display='none'" class="h-32 object-contain">
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center gap-3">
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">${escapeHTML(q.topic)}</span>
+                                    <span class="text-xs font-semibold text-slate-400">Nível: ${escapeHTML(q.difficulty)}</span>
+                                </div>
+                                <p class="text-sm text-slate-800 font-medium leading-relaxed">${escapeHTML(q.text)}</p>
+
+                                ${imageSnippet}
+
+                                <div class="space-y-2 pt-2 border-t border-slate-50">
+                                    ${Object.entries(q.options || {}).map(([key, val]) => `
+                                        <div class="flex items-center gap-2 text-xs">
+                                            <span class="w-5 h-5 rounded-full flex items-center justify-center font-bold ${q.correct === key ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${escapeHTML(key)}</span>
+                                            <span class="${q.correct === key ? 'text-emerald-700 font-semibold' : 'text-slate-600'}">${escapeHTML(val)}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                                <button onclick="deleteQuestion('${escapeJS(q.id)}')" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-2 rounded-xl transition text-xs font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-trash-can"></i> Remover
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const selectionContainer = document.getElementById('quiz-questions-selection');
+            if (appState.questions.length === 0) {
+                selectionContainer.innerHTML = `<p class="text-sm text-slate-400 py-4 col-span-2 text-center">Registre questões primeiro para poder criar uma lista.</p>`;
+            } else {
+                selectionContainer.innerHTML = appState.questions.map(q => `
+                    <label class="border border-slate-200 hover:border-indigo-200 p-4 rounded-2xl flex items-start gap-3 cursor-pointer hover:bg-indigo-50/20 transition">
+                        <input type="checkbox" name="quiz-q-select" value="${escapeAttr(q.id)}" class="mt-1 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                        <div class="text-xs">
+                            <span class="font-bold text-indigo-600 block mb-1">[${escapeHTML(q.topic)}]</span>
+                            <p class="text-slate-700 line-clamp-2">${escapeHTML(q.text)}</p>
+                        </div>
+                    </label>
+                `).join('');
+            }
+
+            const quizzesBody = document.getElementById('table-quizzes-body');
+            if (appState.quizzes.length === 0) {
+                quizzesBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-6 text-center text-slate-400">Nenhuma atividade gerada ainda. Use o formulário acima.</td>
+                    </tr>
+                `;
+            } else {
+                quizzesBody.innerHTML = appState.quizzes.map(quiz => `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-4 px-4 font-semibold text-slate-800">${escapeHTML(quiz.title)}</td>
+                        <td class="py-4 px-4">${escapeHTML(quiz.questionIds?.length || 0)} questões</td>
+                        <td class="py-4 px-4">
+                            <button onclick="copyQuizLink('${escapeJS(quiz.id)}')" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1.5 hover:underline">
+                                <i class="fa-solid fa-copy"></i> Copiar Link
+                            </button>
+                        </td>
+                        <td class="py-4 px-4 text-right">
+                            <button onclick="deleteQuiz('${escapeJS(quiz.id)}')" class="text-rose-500 hover:text-rose-700 p-2 rounded-xl hover:bg-rose-50 transition text-xs font-bold">
+                                <i class="fa-solid fa-trash-can"></i> Remover
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            const studentSelect = document.getElementById('student-quiz-select');
+            const savedValue = studentSelect.value;
+            studentSelect.innerHTML = `<option value="">Selecione uma atividade...</option>` +
+                appState.quizzes
+                    .filter(quiz => quiz.active !== false)
+                    .map(quiz => `<option value="${escapeAttr(quiz.id)}">${escapeHTML(quiz.title)}</option>`)
+                    .join('');
+
+            const params = new URLSearchParams(window.location.search);
+            const quizFromUrl = params.get('quiz');
+            if (quizFromUrl && appState.quizzes.some(q => q.id === quizFromUrl)) {
+                studentSelect.value = quizFromUrl;
+            } else {
+                studentSelect.value = savedValue;
+            }
+        }
+
+        // =========================================================
+        // AUXILIARES DE MODAL / TOAST
+        // =========================================================
+        window.openModal = function(id) {
+            document.getElementById(id).classList.remove('hidden');
+        };
+
+        window.closeModal = function(id) {
+            document.getElementById(id).classList.add('hidden');
+        };
+
+        window.showToast = function(message, icon = "✨") {
+            const toast = document.getElementById('toast-message');
+            document.getElementById('toast-icon').textContent = icon;
+            document.getElementById('toast-text').textContent = message;
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+    </script>
+
+</body>
+</html>
